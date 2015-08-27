@@ -63,7 +63,7 @@ public class BEssPlugin extends JavaPlugin
 			// CBA to make a shade resource transformer to replace it.
 			String build;
 			try {
-				build = new Scanner( getClass().getResourceAsStream( "BUILD.txt" ), "UTF-8" ).useDelimiter( "\\A" ).next();
+				build = new Scanner( BEssPlugin.class.getResourceAsStream( "BUILD.txt" ), "UTF-8" ).useDelimiter( "\\A" ).next();
 			} catch ( Exception e ) {
 				build = ";";
 			}
