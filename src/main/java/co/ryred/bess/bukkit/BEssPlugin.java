@@ -36,7 +36,15 @@
 
 package co.ryred.bess.bukkit;
 
+import org.bukkit.Server;
+import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.JavaPluginLoader;
+
+import java.io.File;
+import java.lang.reflect.Field;
+import java.util.Scanner;
 
 /**
  * @author Cory Redmond
@@ -44,4 +52,40 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class BEssPlugin extends JavaPlugin
 {
+
+	public BEssPlugin()
+	{
+		super();
+
+		try {
+
+			// YES I KNOW THIS IS DIRTY. :(
+			// CBA to make a shade resource transformer to replace it.
+			String build;
+			try {
+				build = new Scanner( getClass().getResourceAsStream( "BUILD.txt" ), "UTF-8" ).useDelimiter( "\\A" ).next();
+			} catch ( Exception e ) {
+				build = ";";
+			}
+
+			PluginDescriptionFile pdf = getDescription();
+			Field versionField = pdf.getClass().getDeclaredField( "version" );
+			versionField.setAccessible( true );
+			versionField.set( pdf, pdf.getVersion().replace( "[[[env.MASTER_BUILD]]]", build ) );
+			versionField.setAccessible( false );
+
+		} catch ( Exception e ) { e.printStackTrace(); }
+
+	}
+
+	public BEssPlugin( PluginLoader loader, Server server, PluginDescriptionFile description, File dataFolder, File file )
+	{
+		super( loader, server, description, dataFolder, file );
+	}
+
+	public BEssPlugin( JavaPluginLoader loader, PluginDescriptionFile pdf, File dataFolder, File file )
+	{
+		super( loader, pdf, dataFolder, file );
+	}
+
 }
