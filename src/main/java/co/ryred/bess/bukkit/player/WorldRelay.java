@@ -34,75 +34,55 @@
  *
  */
 
-package co.ryred.bess.bukkit;
+package co.ryred.bess.bukkit.player;
 
-import co.ryred.bess.bukkit.player.WorldRelay;
+import co.ryred.bess.PluginMessagingChannels;
+import co.ryred.bess.bukkit.BEssPlugin;
 import co.ryred.bess.util.LogsUtil;
-import org.bukkit.Server;
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.PluginLoader;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.plugin.java.JavaPluginLoader;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerMoveEvent;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.util.Scanner;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 
 /**
  * @author Cory Redmond
- *         Created by acech_000 on 26/08/2015.
+ *         Created by acech_000 on 29/08/2015.
  */
-public class BEssPlugin extends JavaPlugin
+public class WorldRelay implements Listener
 {
 
-	public BEssPlugin()
+	private final BEssPlugin plugin;
+
+	public WorldRelay( BEssPlugin plugin )
 	{
-		super();
+		this.plugin = plugin;
+
+		plugin.getServer().getMessenger().registerOutgoingPluginChannel( plugin, PluginMessagingChannels.WORLD_RELAY_CHANNEL.getChannel() );
+		plugin.getServer().getPluginManager().registerEvents( this, plugin );
+
+		LogsUtil._D( "Registered the WorldRelay listener and PMC ", PluginMessagingChannels.WORLD_RELAY_CHANNEL );
+
+	}
+
+	@EventHandler
+	public void onJoin( PlayerMoveEvent e )
+	{
 
 		try {
 
-			// YES I KNOW THIS IS DIRTY. :(
-			// CBA to make a shade resource transformer to replace it.
-			String build;
-			try {
-				build = new Scanner( BEssPlugin.class.getResourceAsStream( "/BUILD.txt" ), "UTF-8" ).useDelimiter( "\\A" ).next();
-			} catch ( Exception e ) {
-				build = ";";
-			}
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			DataOutputStream dos = new DataOutputStream( baos );
 
-			PluginDescriptionFile pdf = getDescription();
-			Field versionField = pdf.getClass().getDeclaredField( "version" );
-			versionField.setAccessible( true );
-			versionField.set( pdf, pdf.getVersion().replace( "[[[env.MASTER_BUILD]]]", build ) );
-			versionField.setAccessible( false );
+			dos.writeUTF( e.getPlayer().getLocation().getWorld().getName() );
 
-		} catch ( Exception e ) { e.printStackTrace(); }
+			e.getPlayer().sendPluginMessage( this.plugin, PluginMessagingChannels.WORLD_RELAY_CHANNEL.getChannel(), baos.toByteArray() );
+
+		} catch ( Exception ex ) {
+			if ( LogsUtil._D() ) ex.printStackTrace();
+		}
 
 	}
 
-	public BEssPlugin( PluginLoader loader, Server server, PluginDescriptionFile description, File dataFolder, File file )
-	{
-		super( loader, server, description, dataFolder, file );
-	}
-
-	public BEssPlugin( JavaPluginLoader loader, PluginDescriptionFile pdf, File dataFolder, File file )
-	{
-		super( loader, pdf, dataFolder, file );
-	}
-
-	@Override
-	public void onLoad()
-	{
-
-		LogsUtil.setLogger( getLogger() );
-
-	}
-
-	@Override
-	public void onEnable()
-	{
-
-		new WorldRelay( this );
-
-	}
 }
