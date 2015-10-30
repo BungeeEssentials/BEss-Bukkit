@@ -57,7 +57,6 @@ public class BEssPlugin extends JavaPlugin
 
 	public BEssPlugin()
 	{
-		super();
 
 		try {
 
